@@ -13,7 +13,8 @@ import {useNavigation} from '@react-navigation/native';
 
 const QrCode = ({data_api, data_search}) => {
   console.log(data_api)
-  const [isOff, SetIsOff] = useState(false)
+  const [isOff, SetIsOff] = useState( false)
+  const [isUpdate, SetIsUpdate] = useState(data_api?.data_search?.NgayHetBaoHanh ? true : false)
   const {control, setValue, handleSubmit} = useForm({mode: 'all'});
   const {Strings} = useAppLanguage();
   const listCity = useGetListCityOld();
@@ -21,7 +22,6 @@ const QrCode = ({data_api, data_search}) => {
   const {navigate} = useNavigation();
 
   const [serialBaoHanh, SetSerialBaoHanh] = useState(data_api?.data_search?.SerialBaoHanh || "")
-
   const [thongSo, SetThongSo] = useState(data_api?.thongSo || "")
 
   const account = AccountService.get();
@@ -40,49 +40,86 @@ const QrCode = ({data_api, data_search}) => {
     setValue('hanbaohanh', data_api?.data_search?.NgayHetBaoHanh || Strings.NotActivated);
   }, []);
   
-  function Scan(data){
 
-    console.log("Data: ", data)
+  // Qrcode
+  async function Scan(dataScan){
+
+    console.log("Data: ", dataScan)
     console.log("qrcode", data_api)
     // const elementToFind = "8a584593-9f53-4723-be8d-7307f1d3bfd3";
-    const elementToFind = data;
+    // const dataScan = dataScan;
 
-    const foundElement = data_api.data_api.find(element => element.SerialBaoHanh === elementToFind);
+    // const foundElement = data_api.data_api.find(element => element.SerialBaoHanh === elementToFind);
 
-    if (foundElement) {
-      console.log("Element found: ", foundElement);
-      // SetDataSearch(foundElement)
-      // navigate('KhBaoHanh',{type: "add", data_api: data_api, data_search: foundElement})
+    const api = 'http://apicaron.cibos.vn/api/bss/baohanh/GetMaBaoHanh?SerialBaoHanh='+dataScan;
+    console.log("API", api);
 
-      // useEffect(() => {
-        setValue('Code', foundElement?.MaSoSanPham);
-        setValue('ProductName',foundElement?.TenSanPham);
-        setValue('thoigian', "" +foundElement?.SoThangBaoHanh || 0);
-        setValue('hanbaohanh', foundElement?.NgayHetBaoHanh || Strings.NotActivated)
-        SetIsOff(true)
-        SetSerialBaoHanh(foundElement?.SerialBaoHanh)
-      // }, []);
+    let response = await fetch(api, 
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data_api)
+        }
+      );
+    let data = await response.json();
+    console.log("Data", data)
 
-    } else {
-      
+    if(data.Status == 1){
+      let result = data.Results;
+      if(result.length > 0){
+        console.log("result", result)
+        console.log("SerialBaoHanh", result[0].SerialBaoHanh)
+        const item = result[0];
+
+        setValue('Code', item?.MaSoSanPham);
+        setValue('ProductName',item?.TenSanPham);
+        setValue('thoigian', "" +item?.SoThangBaoHanh || 0);
+        setValue('hanbaohanh', item?.NgayHetBaoHanh || Strings.NotActivated)
+        SetIsOff(true);
+        SetIsUpdate(item?.NgayHetBaoHanh ? true : false);
+        SetSerialBaoHanh(item?.SerialBaoHanh);
+
+      }
+    }else{
       console.log("Element not found");
       ModalBase.success("Mã không đúng, vui lòng quét lại");
-      // Alert("Không tìm thấy sản phẩm")
-      // SetDataSearch([])
     }
   }
 
   // Submit
   const Submit =  async e => {
-    console.log("aaaaaaaa");
+    console.log("aaaaaaaa", e);
 
      // api kích hoạt bảo hành điện tử =======================
      const phone = account.user_info.phone;
      console.log("Data diện thoại", phone)
-     // kích hoạt bảo hành điện tử
-     console.log("api", 'http://apicaron.cibos.vn/api/bss/baohanh/KichHoatBaoHanh?phone='+ phone+'&SerialBaoHanh=' + serialBaoHanh + '&ThongSo=' + thongSo)
 
-     const response = await fetch('http://apicaron.cibos.vn/api/bss/baohanh/KichHoatBaoHanh?phone='+ phone+'&SerialBaoHanh=' + serialBaoHanh + '&ThongSo=' + thongSo, 
+     // dữ liệu từ form
+     const TenNguoiSuDung = e.name;
+     const DiaChiNSD = e.address;
+     const email = e.email;
+     const bienSoXe = e.biensoxe;
+     const khuVucNSD = e.area;
+
+     console.log("area", khuVucNSD)
+
+     const paramsApi = 'email='+ email + 
+                      '&TenNguoiSuDung='+ TenNguoiSuDung + 
+                      '&khuVucNSD='+ khuVucNSD  + 
+                      '&DiaChiNSD='+ DiaChiNSD +  
+                      '&bienSoXe='+ bienSoXe + 
+                      '&dienThoai='+ phone+
+                      '&SerialBaoHanh=' + serialBaoHanh + 
+                      '&ThongSo=' + thongSo +
+                      '&khacThongSo=' + data_api.khacTS;
+                    ;
+     
+     // kích hoạt bảo hành điện tử
+     console.log("api", 'http://apicaron.cibos.vn/api/bss/baohanh/KichHoatBaoHanh?' + paramsApi)
+
+     const response = await fetch('http://apicaron.cibos.vn/api/bss/baohanh/KichHoatBaoHanh?' + paramsApi, 
        {
          method: 'POST',
          headers: {
@@ -96,6 +133,7 @@ const QrCode = ({data_api, data_search}) => {
      if(data.Status == 1){
       console.log("Success=========Success")
       ModalBase.success("Thành công");
+      SetIsUpdate(true)
       // navigate('CsBaoHanh', )
     }else{
       ModalBase.success("Thất bại");
@@ -104,17 +142,30 @@ const QrCode = ({data_api, data_search}) => {
   
   // Update
   const Update =  async e => {
-    console.log("aaaaaaaa");
+    console.log("aaaaaaaa222");
 
     // Lấy data từ form
     const TenNguoiSuDung = e.name;
     const DiaChiNSD = e.address;
     const DienThoaiNSD = e.phone;
-     
-     // Update bảo hành điện tử
-     console.log("api", 'http://apicaron.cibos.vn/api/bss/baohanh/UpdateNguoiSuDung?TenNguoiSuDung='+ TenNguoiSuDung+'&SerialBaoHanh=' + serialBaoHanh + '&DiaChiNSD=' + DiaChiNSD + '&DienThoaiNSD=' + DienThoaiNSD)
+    const email = e.email;
+    const bienSoXe = e.biensoxe;
+    const khuVucNSD = e.area;
 
-     const response = await fetch('http://apicaron.cibos.vn/api/bss/baohanh/UpdateNguoiSuDung?TenNguoiSuDung='+ TenNguoiSuDung+'&SerialBaoHanh=' + serialBaoHanh + '&DiaChiNSD=' + DiaChiNSD + '&DienThoaiNSD=' + DienThoaiNSD, 
+    console.log("area", khuVucNSD)
+
+    
+    const paramsApi = 'email='+ email + 
+                      '&khuVucNSD='+ khuVucNSD +  
+                      '&bienSoXe='+ bienSoXe + 
+                      '&TenNguoiSuDung='+ TenNguoiSuDung+
+                      '&SerialBaoHanh=' + serialBaoHanh + 
+                      '&DiaChiNSD=' + DiaChiNSD + 
+                      '&DienThoaiNSD=' + DienThoaiNSD;
+     // Update bảo hành điện tử
+     console.log("api", 'http://apicaron.cibos.vn/api/bss/baohanh/UpdateNguoiSuDung?' + paramsApi)
+
+     const response = await fetch('http://apicaron.cibos.vn/api/bss/baohanh/UpdateNguoiSuDung?' + paramsApi, 
        {
          method: 'POST',
          headers: {
@@ -140,61 +191,40 @@ const QrCode = ({data_api, data_search}) => {
       type: 'TEXT_INPUT',
       name: 'Code',
       label: Strings.ProductCode,
-      required: {
-        required: {value: true, message: Strings.This_field_is_required},
-      },
-      isPrimary: true,
+      // required: {
+      //   required: {value: true, message: Strings.This_field_is_required},
+      // },
+      // isPrimary: true,
+      disabled: true,
     },
 
     {
       type: 'TEXT_INPUT',
       name: 'ProductName',
       label: Strings.ProductName,
-      required: {
-        required: {value: true, message: Strings.This_field_is_required},
-      },
-      isPrimary: true,
-    },
-    {
-      type: 'TEXT_INPUT',
-      name: 'model',
-      label: Strings.Model,
+      // required: {
+      //   required: {value: true, message: Strings.This_field_is_required},
+      // },
+      // isPrimary: true,
+      disabled: true,
     },
     {
       type: 'TEXT_INPUT',
       name: 'thoigian',
       label: Strings.WarrantyPeriod,
+      disabled: true,
     },
     {
         type: 'TEXT_INPUT',
         name: 'hanbaohanh',
         label: Strings.EndOfWarranty,
-      //   dataDropDown: [
-      //     {label: 'Nam', value: 1},
-      //     {label: 'Nữ', value: 0},
-      //   ],
-      //   keyValueDropdown: 'label',
-      //   keyResult: 'value',
-        // required: {
-        //   required: {value: true, message: Strings.This_field_is_required},
-        // },
-        // isPrimary: true,
+        disabled: true,
       },
       {
         type: 'TEXT_INPUT',
         name: 'name',
         label: Strings.Name,
         defaultValue: account.user_info.first_name + " " + account.user_info.last_name,
-      //   dataDropDown: [
-      //     {label: 'Nam', value: 1},
-      //     {label: 'Nữ', value: 0},
-      //   ],
-      //   keyValueDropdown: 'label',
-      //   keyResult: 'value',
-        // required: {
-        //   required: {value: true, message: Strings.This_field_is_required},
-        // },
-        // isPrimary: true,
       },
     {
       type: 'DROPDOWN',
@@ -220,15 +250,15 @@ const QrCode = ({data_api, data_search}) => {
     //   },
     //   isPrimary: true,
     },
-    {
-      type: 'TEXT_INPUT',
-      name: 'biensoxe',
-      label: Strings.License_plates,
+    // {
+    //   type: 'TEXT_INPUT',
+    //   name: 'biensoxe',
+    //   label: Strings.License_plates,
     //   required: {
     //     required: {value: true, message: Strings.This_field_is_required},
     //   },
-    //   isPrimary: true,
-    },
+    // //   isPrimary: true,
+    // },
     {
       type: 'TEXT_INPUT',
       name: 'email',
@@ -239,6 +269,7 @@ const QrCode = ({data_api, data_search}) => {
             /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
           message: Strings.Email_is_not_valid,
         },
+         required: {value: true, message: Strings.This_field_is_required},
       },
     },
   ];
@@ -319,7 +350,7 @@ const QrCode = ({data_api, data_search}) => {
                       name={item.name}
                       dataDropDown={item.dataDropDown}
                       keyValueDropdown={item.keyValueDropdown}
-                      keyResult={item.keyResult}
+                      keyResult={item.keyValueDropdown}
                       styleInput={{
                       backgroundColor: Colors.background_2,
                       borderColor: item.isPrimary ? Colors.primary : Colors.text,
@@ -329,6 +360,7 @@ const QrCode = ({data_api, data_search}) => {
                       rules={item.required}
                   />
                   )}
+                  
               </View>
                       );
                   })}
@@ -339,7 +371,7 @@ const QrCode = ({data_api, data_search}) => {
                       </AppText>
                   )} */}
 
-                  {data_api?.data_search?.NgayHetBaoHanh ? 
+                  {isUpdate? 
                    <AppButton
                    style={{marginTop: 6}}
                    control={control}

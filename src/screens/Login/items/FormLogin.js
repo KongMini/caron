@@ -60,6 +60,7 @@ export function FormLogin() {
     try {
       setSubmiting(true);
       const {password, phone} = data;
+
       const result = await FetchApi.login({
         username: phone,
         password: password,
@@ -160,7 +161,7 @@ export function FormLogin() {
           // loading={true}
         />
 
-        <View style={{marginVertical: (Sizes.device_width < Sizes.device_height) ?Sizes.paddingTablet * 2.5 :Sizes.paddingTablet * 1.5 }}>
+        <View style={{marginVertical: (Sizes.device_width < Sizes.device_height) ?Sizes.paddingTablet * 2.5 :Sizes.paddingTablet * 0.75 }}>
           <AppButton
             control={control}
             title={Strings.Forgot_password}

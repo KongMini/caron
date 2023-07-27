@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {useForm} from 'react-hook-form';
-import {View, TouchableOpacity, Linking, Platform} from 'react-native';
+import {View, TouchableOpacity, Linking, Platform, Alert} from 'react-native';
 import {useQuery} from 'react-query';
 import {useNavigation} from '@react-navigation/native';
+import DeviceInfo from 'react-native-device-info';
 import {
   TouchableCo,
   AppInput,
@@ -26,98 +27,157 @@ const Search = ({data_api}) => {
   // const idTinhThanh = watch('idTinhThanh');
   const {navigate} = useNavigation();
 
-  // const {data, isLoading} = useQuery([`getListRescue-${idTinhThanh}`], () =>
-  //   FetchApi.listRescue(idTinhThanh),
-  // );
-
-
   console.log("data_api Search", data_api)
 
-  // const cities = useQuery(
-  //   [`useGetListCityOld-${1}`],
-  //   FetchApi.getAlltinhthanhOld,
-  // );
-
-  // const onCall = e => {
-  //   const phone = e.phone;
-  //   let phoneNumber = phone;
-  //   if (isIOS) {
-  //     phoneNumber = `telprompt:${phone}`;
-  //   } else {
-  //     phoneNumber = `tel:${phone}`;
-  //   }
-  //   Linking.canOpenURL(phoneNumber)
-  //     .then(supported => {
-  //       if (!supported) {
-  //         console.log('Phone number is not available');
-  //       } else {
-  //         return Linking.openURL(phoneNumber);
-  //       }
-  //     })
-  //     .catch(err => console.log(err));
-  // };
-
-  // const openMap = e => {
-  //   const {latitude, longitude} = e;
-  //   const destination = `${latitude}+${longitude}`;
-  //   const url = Platform.select({
-  //     android: `google.navigation:q=${destination}`,
-  //     ios: `maps://app?daddr=${destination}`,
-  //   });
-  //   Linking.openURL(url).catch(() => {});
-  // };
-
-  // const func = [
-  //   {
-  //     label: Strings.Contact,
-  //     onPress: e => onCall(e),
-  //     icon: 'phone-call',
-  //     type: 'Feather',
-  //   },
-  //   {label: Strings.Guide, onPress: e => openMap(e), icon: 'arrowright'},
-  // ];
-
-  // if (isLoading) {
-  //   return <Loading />;
-  // }
-
-  // if (data?._error_code === 1) {
-  //   return <ErrorView title={data.message} />;
-  // }
-
-
   // Data start
-  const [dataSearch, SetDataSearch] = useState([]) 
+  const [romDevice, SetRomDevice] = useState() 
   // const dataSearch = []
 
   const onSearch = async () => {
     const value_ServicesSearchText = getValues().servicesSearchText;
+    const api = 'http://apicaron.cibos.vn/api/bss/baohanh/GetMaBaoHanh?SerialBaoHanh='+value_ServicesSearchText;
+    console.log("API", api);
 
-    if(value_ServicesSearchText !== ""){
-      console.log("servicesSearchText: ", getValues().servicesSearchText)
+    let response = await fetch(api, 
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data_api)
+        }
+      );
+    let data = await response.json();
+    console.log("Data", data)
+      
 
-      // const elementToFind = "8a584593-9f53-4723-be8d-7307f1d3bfd3";
-      const elementToFind = value_ServicesSearchText;
+      if(data.Status == 1){
+        let result = data.Results;
+        if(result.length > 0){
+          console.log("result", result)
+          console.log("SerialBaoHanh", result[0].SerialBaoHanh)
+          const item = result[0];
+          console.log("item", item)
+          if(item?.SerialBaoHanh.indexOf("MH") !== -1) {
+              
+            var StrSerialBaoHanh = item?.SerialBaoHanh;
+            
+            // Cắt chuỗi
+            const ma          = StrSerialBaoHanh.slice(0, 2) ;
+            const ram         = StrSerialBaoHanh.slice(2, 4) * 1.0;
+            const rom         = StrSerialBaoHanh.slice(4, 7) * 1.0;
+            const doPhanGiai  = StrSerialBaoHanh.slice(7, 9) * 1.0;
+            const sizeManHinh = StrSerialBaoHanh.slice(9, 11) * 1.0;
+            const hotro360    = StrSerialBaoHanh.slice(9, 11) * 1.0;
 
-      const foundElement = data_api.find(element => element.SerialBaoHanh === elementToFind);
+            // Lấy thông tin ROM
+            const capacity =  Number ((DeviceInfo.getTotalDiskCapacitySync() / (1000 * 1000 * 1000)).toFixed(0));
+            console.log('ROM: Tổng dung lượng đĩa(GB):', capacity);
+            
+            let romDevice = 0;
+            if(capacity < 32) romDevice = 32;
+            else if(capacity < 64) romDevice = 64;
+            else if(capacity < 128) romDevice = 128;
+            else romDevice = 256;
+            
+            console.log('SetRomDevice:', romDevice);
 
-      if (foundElement) {
-        console.log("Element found: ", foundElement);
-        // SetDataSearch(foundElement)
-        navigate('KhBaoHanh',{type: "add", data_api: data_api, data_search: foundElement})
-      } else {
-        
+            // Lấy thông tin RAM
+            const totalMemorySync = (DeviceInfo.getTotalMemorySync() / (1000 * 1000 * 1000)).toFixed(0);
+            console.log('RAM: Tổng dung lượng bộ nhớ (đồng bộ) (GB):', totalMemorySync);
+
+            // Kiểm tra thiết bị có phải tablet
+            const isTablet = (Sizes.device_width > Sizes.device_height);
+            console.log("isTablet: ", isTablet)
+            
+
+            const thongSo = "Ram:" + totalMemorySync + ",Rom:"+ romDevice + ",Tablet:" + isTablet + ",width:" + Sizes.device_width.toFixed(0)  + ",height:" + Sizes.device_height.toFixed(0);
+            console.log("Thông số", thongSo)
+
+            
+
+            if(ram == totalMemorySync && rom == romDevice && isTablet){
+              Alert.alert('Bạn có chắc chắn muốn kích hoạt sản phẩm ' + item?.TenSanPham + ' không?', '', [
+                {
+                  text: 'Huỷ',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Kích hoạt',
+                  onPress: async () => {
+                    console.log("Item", item);
+                    navigate('KhBaoHanh',{type: "add" ,thongSo: thongSo , data_search: item, khacTS:0})
+                  },
+                },
+              ]);
+            }else{
+
+              Alert.alert('Bạn có chắc chắn muốn kích hoạt sản phẩm màn hình này trên khi không đúng thông số kĩ thuật không?', '', [
+                {
+                  text: 'Huỷ',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Kích hoạt',
+                  onPress: async () => {
+                    console.log("Item", item);
+                    navigate('KhBaoHanh',{type: "add" ,thongSo: thongSo , data_search: item, khacTS:1})
+                  },
+                },
+              ]);
+            }
+          }else{
+            Alert.alert('Bạn có chắc chắn muốn kích hoạt sản phẩm ' + item?.TenSanPham + ' không?', '', [
+              {
+                text: 'Huỷ',
+                style: 'cancel',
+              },
+              {
+                text: 'Kích hoạt',
+                onPress: async () => {
+                  console.log("Item", item);
+                  navigate('KhBaoHanh',{type: "add" ,thongSo: "" , data_search: item})
+                },
+              },
+            ]);
+          }
+
+
+        }else{
+          console.log("Element not found");
+          ModalBase.success("Không tìm thấy");
+        }
+      }else{
         console.log("Element not found");
-        ModalBase.success("Không tìm thấy");
-        // Alert("Không tìm thấy sản phẩm")
-        SetDataSearch([])
+        ModalBase.error("Không tìm thấy");
       }
+      // console.log("Re")
 
-    }else{
-      console.log("servicesSearchText: ", "nulll")
-      ModalBase.success("Không tìm thấy");
-      SetDataSearch([])
-    }
+    // if(value_ServicesSearchText !== ""){
+    //   console.log("servicesSearchText: ", getValues().servicesSearchText)
+
+    //   // const elementToFind = "8a584593-9f53-4723-be8d-7307f1d3bfd3";
+    //   const elementToFind = value_ServicesSearchText;
+
+    //   const foundElement = data_api.find(element => element.SerialBaoHanh === elementToFind);
+
+    //   if (foundElement) {
+    //     console.log("Element found: ", foundElement);
+    //     // SetDataSearch(foundElement)
+    //     navigate('KhBaoHanh',{type: "add", data_api: data_api, data_search: foundElement})
+    //   } else {
+        
+        // console.log("Element not found");
+        // ModalBase.success("Không tìm thấy");
+        // // Alert("Không tìm thấy sản phẩm")
+    //     SetDataSearch([])
+    //   }
+
+    // }else{
+    //   console.log("servicesSearchText: ", "nulll")
+    //   ModalBase.success("Không tìm thấy");
+    //   SetDataSearch([])
+    // }
     
 
     // if (!getValues().servicesSearchText) {

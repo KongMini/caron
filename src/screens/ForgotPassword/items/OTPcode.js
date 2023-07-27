@@ -36,10 +36,11 @@ const OTPcode = ({setScreen, getValues, setValue}) => {
     <>
       <AppText
         style={{
-          marginTop: Sizes.height(15),
-          marginBottom: Sizes.height(5),
+          marginTop:  Sizes.isMobile ? Sizes.height(15) : Sizes.height(5),
+          marginBottom: Sizes.isMobile ? Sizes.height(5) : Sizes.height(2),
           textAlign: 'center',
           marginHorizontal: Sizes.padding * 1.5,
+          fontSize: Sizes.isMobile ? Sizes.h5 : Sizes.h8
         }}>
         {Strings.OTP_description}
       </AppText>

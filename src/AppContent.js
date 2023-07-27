@@ -24,6 +24,7 @@ import MainNavigator from './navigators/MainNavigator';
 import Web from './screens/Web/Web';
 import Login from './screens/Login/Login';
 import Register from './screens/Register/Register';
+import CsBaoHanh from './screens/CsBaoHanh/CsBaoHanh';
 import ForgotPassword from './screens/ForgotPassword/ForgotPassword';
 import {Appearance, StatusBar, View} from 'react-native';
 import HeaderApp from './navigators/items/HeaderApp';

@@ -3,6 +3,7 @@ import {appKeys, host} from './system';
 const Apis = {
   login: `${host.api_user}/ps_user/login`,
   logout: `${host.api_user}/ps_user/logout`,
+  delete_account: `${host.api_user}/ps_user/delete_account`,
   resetPassword: `${host.api_user}/ps_user/reset_password`,
   profile: `${host.api_user}/ps_user/profile`,
   changePassword: `${host.api_user}/ps_user/change_password`,

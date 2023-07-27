@@ -51,7 +51,7 @@ const FormPhone = ({setScreen, control, handleSubmit}) => {
     <>
       <AppInput
         containerStyle={{
-          marginTop: Sizes.height(20),
+          marginTop: Sizes.isMobile ? Sizes.height(20) : Sizes.height(5),
           paddingHorizontal: Sizes.padding * 3,
         }}
         style={{borderWidth: 0}}

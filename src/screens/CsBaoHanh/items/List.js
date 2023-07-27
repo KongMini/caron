@@ -6,58 +6,19 @@ import React from 'react';
 import {Alert, TouchableOpacity, View} from 'react-native';
 import {AppIcon, AppText} from '../../../elements';
 import {FetchApi, Sizes, useAppLanguage, useAppTheme} from '../../../utils';
-import { DataNull } from '../../../elements';
+import { DataNull, Loading } from '../../../elements';
 import {useNavigation} from '@react-navigation/native';
 import DeviceInfo from 'react-native-device-info';
 import { Dimensions } from 'react-native';
 
 
 
-const List = ({ data}) => {
+const List = ({ data, loading}) => {
   const {Colors} = useAppTheme();
   const {Strings} = useAppLanguage();
   const {navigate} = useNavigation();
 
-  
-  // const [api, SetApi] = useState("")
-  
-  // // Lấy danh sách bảo hành
-  // async function fetchData() {
-  //   try {
-      
-  //     // api đăng ký =======================
-  //     const data_api = "0972473568";
-  //     console.log("Data diện thoại", data_api)
-  //     // đăng ký xe 
-
-  //     const response = await fetch('http://apicaron.cibos.vn/api/bss/baohanh/GetListBaoHanhByPhone?phone='+data_api, 
-  //       {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json'
-  //         },
-  //         body: JSON.stringify(data_api)
-  //       }
-  //     );
-  //     const data = await response.json();
-      
-  //     SetApi(data.Results)
-      
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // }
-  
-  // useEffect(() => {fetchData()}, []);
-  // console.log("API", api)
-
-  // console.log("data", data)
-
   const Item = ({item, index, last}) => {
-    // const isRegistryDeadline = dayjs(item.NgayHoaDon, 'DD/MM/YYYY').diff(dayjs(), 'days') <= 28;
-    // const isSelected = selectedCar?.id === item?.id;
-
-    
     return (
       <View
         style={{
@@ -75,15 +36,8 @@ const List = ({ data}) => {
             }
             
           }}
-          // onPress={() => {
-          //   if (item.id === selectedCar?.id) {
-          //     setSelectedCar();
-          //     return;
-          //   }
-          //   setSelectedCar(item);
-          // }}
           style={{
-            width: '82%',
+            width: '100%',
             flexDirection: 'row',
             justifyContent: 'space-between',
             marginVertical: Sizes.padding,
@@ -104,7 +58,8 @@ const List = ({ data}) => {
             {item?.NgayHetBaoHanh ? item?.NgayHetBaoHanh.substring(10, -1) : "Chưa kích hoạt" }
           </AppText>
         </TouchableOpacity>
-        {item?.NgayHetBaoHanh ? null : <AppIcon
+        {item?.NgayHetBaoHanh ? null : 
+        <AppIcon
           onPress={() => {
             
             
@@ -220,7 +175,13 @@ const List = ({ data}) => {
           {Strings.Warranty_Period.toUpperCase()}
         </AppText>
       </View>
-      {(data?.length > 0) ? data.map((item, index) => {
+
+      {
+      loading ? 
+        <Loading />
+      :
+      
+      (data?.length > 0) ? data.map((item, index) => {
         return (
           <Item
             key={`${item?._ukid}`}

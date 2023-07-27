@@ -315,6 +315,18 @@ const FetchApi = {
       return {message: error.message};
     }
   },
+  delete_account: async () => {
+    try {
+      const header = {
+        method: 'POST',
+      };
+      const api = Apis.delete_account;
+      const result = await CommonCall(api, header);
+      return result;
+    } catch (error) {
+      return {message: error.message};
+    }
+  },
   changePassword: async obj => {
     try {
       const header = {

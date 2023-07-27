@@ -55,6 +55,7 @@ const CheckLogic = {
   },
 };
 const StringsEnglish = {
+  Delete_Account: "Delete account",
   Update: "Update",
   AppIntro_next: 'Next',
   App_name: 'demo',
@@ -409,6 +410,7 @@ const StringsEnglish = {
 };
 
 const StringsVietnamese = {
+  Delete_Account: "Xoá tài khoản",
   Update: "Cập nhật",
   AppIntro_next: 'Next',
   App_name: 'demo',

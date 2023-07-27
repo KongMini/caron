@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, Alert} from 'react-native';
 import {useNavigation} from '@react-navigation/core';
 
 import {
@@ -69,6 +69,39 @@ const MenuFunction = () => {
         try {
           FetchApi.logout();
           ResetFunction.resetToLogin();
+          // AccountService.set({});
+          // const tag = 'fcmToken';
+
+          // const mmkvId = `mmkv-${tag}`;
+          // const mmkvKey = `key-${tag}`;
+
+          // const MMKVwithID = new MMKVStorage.Loader()
+          //   .withInstanceID(mmkvId)
+          //   .initialize();
+
+          // MMKVwithID.setMap(mmkvKey, {});
+        } catch (error) {}
+      },
+    },
+    {
+      label: Strings.Delete_Account,
+      onPress: () => {
+        try {
+
+          Alert.alert('Bạn có chắc chắn muốn xoá tài khoản này không?', '', [
+            {
+              text: 'Huỷ',
+              style: 'cancel',
+            },
+            {
+              text: 'Đồng ý',
+              onPress: async () => {
+                FetchApi.delete_account();
+                ResetFunction.resetToLogin();
+              },
+            },
+          ]);
+          
           // AccountService.set({});
           // const tag = 'fcmToken';
 

@@ -77,14 +77,14 @@ const ForgotPassword = ({navigation}) => {
         resizeMode="contain"
       />
       <View style={{flex: 1}}>{renderContent()}</View>
-      <AppText
+      {/* <AppText
         style={{
           marginTop: 10,
           fontStyle: 'italic',
           alignSelf: 'center',
         }}>
         {Strings.Description_bottom_login}
-      </AppText>
+      </AppText> */}
     </AppContainer>
   );
 };
